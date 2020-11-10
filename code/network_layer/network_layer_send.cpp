@@ -3,15 +3,10 @@
 #include <string.h>
 #include <conio.h>
 
-void network_layer_send(char *buffer, int len) {
-    char header[] = "network_layer_header;";
-    assert(strlen(buffer) == len);
-    int length = 0;
-    char *buffer2 = attach_header(buffer, header, &length);
-    printf("%s\n", buffer2);
-    datalink_layer_send(buffer2, length);
-    free(buffer2);
-}
+unsigned char VersionAndIHL=0x45;
+unsigned char TOS=0x00;
+unsigned int IPv4_TotalLength=
+
 // 4 bit
 int IPv4_version=0b0100;
 // 4 bit
