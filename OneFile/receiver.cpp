@@ -142,6 +142,7 @@ void network_layer_receriver(unsigned char* payload,int len){
     //IPv4_Version 
     unsigned char IPv4_Version;
     memcpy(&IPv4_Version,&payload[0],1);
+    printf("%02x\n",IPv4_Version);
     printf("IPv4_Version: ");
     PrintBinary((int)IPv4_Version,7,4);
     printf("\n");
@@ -350,7 +351,7 @@ void start_receive(char* fileinput) {
 
         unsigned char payload[1500];
         memcpy(payload, &buffer[14], frame_len-18);
-        network_layer_receriver(payload, frame_len-18);
+        //network_layer_receriver(payload, frame_len-18);
         printf("PayLoad:\n");
         printf("%s\n", payload);
         printf("<--------------------------Frame END--------------------------->\n\n");

@@ -79,10 +79,11 @@ void send_frame(unsigned char* frame_data, unsigned short len, FILE* file) {
 
 // Start send
 void datalink_layer_send(unsigned char* buf,int len){
-    long FrameLength = make_frame(&DesMacAddr, &SrcMacAddr, 0x0800, buf, len, buf);
+    unsigned char result[1560];
+    long FrameLength = make_frame(&DesMacAddr, &SrcMacAddr, 0x0800, buf, len, result);
     // Data destination
     char fileoutput[] = { "../data/2.txt" };
-    send_frame(buf, FrameLength, OpenFile(fileoutput));
+    send_frame(result, FrameLength, OpenFile(fileoutput));
 }
 ///////////////////////数据链路层-发送-END////////////////////////////////
 
@@ -158,14 +159,14 @@ unsigned short extendr_16bit(unsigned int bit_content,int bit_offset){
   return res;
 }
 
-unsigned short extendl_8bit(unsigned int bit_content,int bit_offset){
+unsigned char extendl_8bit(unsigned int bit_content,int bit_offset){
   bit_content=bit_content<<bit_offset;
   unsigned char res=0b0; //16 bit
   res+=bit_content;
   return res;
 }
 
-unsigned short extendr_8bit(unsigned int bit_content,int bit_offset){
+unsigned char extendr_8bit(unsigned int bit_content,int bit_offset){
   bit_content=bit_content>>bit_offset;
   unsigned char res=0b0; //16 bit
   res+=bit_content;
