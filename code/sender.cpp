@@ -85,7 +85,7 @@ void start_send(char* fileinput, char* fileoutput) {
         int FrameLength;
         // The last frame
         if (j != PayLoadCount) {
-            fread(data, sizeof(char), 1500, fileIn);
+            fread( , sizeof(char), 1500, fileIn);
             FrameLength = make_frame(&DesMacAddr, &SrcMacAddr, 0x0800, data, 1500, buf);
             send_frame(buf, FrameLength, fileOut);
         }
