@@ -3,6 +3,15 @@
 #include <string.h>
 #include <conio.h>
 
+  struct A
+  {
+      int _a:2;   //:数字的意思是，_a变量占2 个 bit位
+      int _b:5;   
+      int _c:10;
+      int _d:30;
+  };
+  printf("%d\n", sizeof(struct A));
+
 unsigned char VersionAndIHL=0x45;
 unsigned char TOS=0x00;
 unsigned int IPv4_TotalLength=
