@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
-
+#include "datalink_layer_send.h"
 // 数据链路层S
 // Mac Address
 typedef unsigned char mac_addr[6];
@@ -247,7 +247,7 @@ void start_send(IP_Packet ip_packet_info, char* fileinput, char* fileoutput) {
         if (j != PayLoadCount) {
             fread(IPv4_Data, sizeof(char), DATA_MAXSIZE, fileIn);
             unsigned long IpPacketLen=MakeIpPacket(ip_packet_info,buf,ip_packet_info.IPv4_Option,40,IPv4_Data,DATA_MAXSIZE);//AddDataToPacket(ip_packet_info,data,DATA_MAXSIZE,buf);
-            datalink_layer_send(buf, IpPacketLen);
+              buf, IpPacketLen);
         }
         else {
             LastFramePos = ftellSafe(fileIn);
