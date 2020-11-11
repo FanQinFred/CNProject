@@ -79,7 +79,6 @@ void send_frame(unsigned char* frame_data, unsigned short len, FILE* file) {
 
 // Start send
 void datalink_layer_send(unsigned char* buf,int len){
-    printf("%s","lalalalalla");
     long FrameLength = make_frame(&DesMacAddr, &SrcMacAddr, 0x0800, buf, len, buf);
     // Data destination
     char fileoutput[] = { "../data/2.txt" };
@@ -288,7 +287,7 @@ void start_send(IP_Packet ip_packet_info, char* fileinput) {
 
     }
     fclose(fileIn);
-    printf("Data has been sent successfully, please run receive file... "); 
+    printf("Data has been sent successfully, please run receive file...\n"); 
 }
 ///////////////////////网络层-发送-END////////////////////////////////
 
@@ -307,7 +306,9 @@ int main(){
                               0b0,  //IPv4_Option
                               0b0}; //IPv4_Data
 	HeaderSetCheckSum(ip_packet_info);
+  printf("IPv4_HeaderCheckSum: "); 
   PrintBinary(ip_packet_info.IPv4_HeaderCheckSum);
+  printf("\n");
   // Data source
   char fileinput[] = { "../data/1.txt" };
   // Data destination
