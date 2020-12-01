@@ -10,7 +10,7 @@
 #include <sys/time.h> 
   
 #define BUFLEN 1024 
-#define PORT 6666
+#define PORT 9000
 #define LISTNUM 20
   
 int main() 
@@ -88,7 +88,7 @@ int main()
                         printf("server 请求终止聊天!\n"); 
                         break; 
                     } 
-                        len = send(newfd,buf,strlen(buf),0); 
+                        len = send(newfd,buf,strlen(buf),0);   //服务端发送消息
                     if(len > 0) 
                         printf("\t消息发送成功：%s\n",buf); 
                     else{ 
@@ -101,7 +101,7 @@ int main()
                     /******接收消息*******/ 
                     memset(buf,0,sizeof(buf)); 
                     /*fgets函数：从流中读取BUFLEN-1个字符*/ 
-                    len = recv(newfd,buf,BUFLEN,0); 
+                    len = recv(newfd,buf,BUFLEN,0);   //服务端接收消息
                     if(len > 0) 
                         printf("客户端发来的信息是：%s\n",buf); 
                     else{ 

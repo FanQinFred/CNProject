@@ -10,7 +10,7 @@
 #include <sys/time.h>
 
 #define BUFLEN 1024
-#define PORT 6666
+#define PORT 9000
 
 int main(int argc, char **argv)
 {
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
             if(FD_ISSET(sockfd,&rfds)){
                 /******接收消息*******/
                 bzero(buf,BUFLEN);
-                len = recv(sockfd,buf,BUFLEN,0);
+                len = recv(sockfd,buf,BUFLEN,0);    //客户端接收消息
                 if(len > 0)
                     printf("服务器发来的消息是：%s\n",buf);
                 else{
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
                     printf("client 请求终止聊天!\n");
                     break;
                 }
-                    len = send(sockfd,buf,strlen(buf),0);
+                len = send(sockfd,buf,strlen(buf),0);  //客户端发送消息
                 if(len > 0)
                     printf("\t消息发送成功：%s\n",buf); 
                 else{
