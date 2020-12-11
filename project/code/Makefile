@@ -1,3 +1,3 @@
-project: server.c client.c
-	gcc server.c -o server
-	gcc client.c -o client
+project: server.cpp client.cpp
+	gcc server.cpp -o server
+	gcc client.cpp -o client
