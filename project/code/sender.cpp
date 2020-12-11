@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <conio.h>
 
 #define UDP_DATA_MAXSIZE 65527
 #define IPV4_DATA_MAXSIZE 1440
@@ -84,8 +83,8 @@ unsigned short make_frame(mac_addr *dst, mac_addr *src, unsigned short protocol,
 // Send a frame
 void send_frame(unsigned char *frame_data, unsigned short len, FILE *file)
 {
-  fwrite(&len, sizeof(len), 1, file);
-  fwrite(frame_data, sizeof(char), len, file);
+  fwrite(&len, sizeof(len), 1, file);   //发送帧的长度
+  fwrite(frame_data, sizeof(char), len, file);  //发送帧
 }
 
 // Start send
