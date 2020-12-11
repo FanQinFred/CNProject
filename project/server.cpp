@@ -18,8 +18,8 @@
 #define DATALINK_DATA_MAXSIZE 1500
 
 #define BUFLEN 1518
-#define PORT 8100
-#define LISTNUM 20
+#define PORT 8200
+#define LISTNUM 200
 
 ///////////////////////工具-START////////////////////////////////
 // OpenFile more safe
@@ -541,7 +541,7 @@ int main()
             if (maxfd < newfd)
                 maxfd = newfd;
             /*设置超时时间*/
-            tv.tv_sec = 6;
+            tv.tv_sec = 10;
             tv.tv_usec = 0;
             /*等待聊天*/
             retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
@@ -588,10 +588,9 @@ int main()
                     memset(buf, 0, sizeof(buf));
                     /*fgets函数：从流中读取BUFLEN-1个字符*/
                     len = recv(newfd, buf, BUFLEN, 0);
-                    printf("(char*)buf %s\n",(char*)buf);
-                    printf("len = recv(newfd, buf, BUFLEN, 0)——>%d\n",len);
                     if (len > 0)
                     {
+                        printf("<--------------------------------------------------------------------------------------------------------------->\n");
                         // printf("客户端发来的信息是：\n");
                         // for (int ii = 0; ii < len; ii++)
                         // {
@@ -621,7 +620,7 @@ int main()
                         if (!bool_mac_same)
                         {
                             printf("MAC ERROR\n");
-                            //exit(0);
+                            exit(0);
                         }
                         printf("DA_MAC:\n");
                         show_mac_addr(dst_mac);
@@ -647,7 +646,7 @@ int main()
                         // printf("PayLoad:\n");
                         // show_payload(payload, len - 18);
                         // printf("\n");
-                        printf("<----------------------Frame End-------------------------->\n");
+                        printf("<--------------------------------------------------------------------------------------------------------------->\n");
                     }
                     else
                     {
