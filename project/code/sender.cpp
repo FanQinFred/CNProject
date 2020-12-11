@@ -278,7 +278,6 @@ void network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, 
   // Split the data
   for (unsigned int j = 0; j <= udp_packet_len / 1440; j++)
   {
-    printf("j: %d\n",j);
     // // 1 bit
     // unsigned int IPv4_NoFunc : 1;
     // // 1 bit

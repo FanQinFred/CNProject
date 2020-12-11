@@ -469,6 +469,7 @@ void start_receive(char *fileinput)
     // Receive each frame
     while (fread(&frame_len, sizeof(frame_len), 1, fileIn))
     {
+        printf("<-----------------------%d Frame Start-------------------------->\n",FrameIndex);
         printf("frame_len: %d\n", frame_len);
         if (frame_len == 0)
             break;
@@ -498,7 +499,6 @@ void start_receive(char *fileinput)
             printf("MAC ERROR\n");
             exit(0);
         }
-        printf("<-----------------------Frame Start-------------------------->\n");
         printf("The Content of The %ld th Frame is: \n", FrameIndex);
         printf("DA_MAC:\n");
         show_mac_addr(dst_mac);
@@ -525,7 +525,8 @@ void start_receive(char *fileinput)
         // show_payload(payload, frame_len - 18);
         // printf("\n");
         // printf("<----------------------- %ld th Frame END ------------------------>\n\n", FrameIndex);
-        // FrameIndex++;
+        FrameIndex++;
+        printf("<-----------------------%d Frame End-------------------------->\n",FrameIndex);
     }
 }
 ///////////////////////数据链路层-接受-END////////////////////////////////
