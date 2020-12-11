@@ -110,6 +110,12 @@ void transfer_layer_receriver(unsigned char *UDP_DATA, int len)
     //     PrintBinary((int)UDP_Data[i], 7, 0); // 16,17,18,19 byte
     // }
     // printf("\n");
+    printf("UDP_Data: ");
+    for (int i = 0; i < Data_Len; ++i)
+    {
+        printf("%c",UDP_Data[i]);
+    }
+    printf("\n");
 }
 ///////////////////////传输层-接受-END////////////////////////////////
 
