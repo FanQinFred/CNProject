@@ -220,12 +220,12 @@ void HeaderSetCheckSum(IP_Packet &ip_packet)
 //unsigned long IpPacketLen=MakeIpPacket(ip_packet_info,ipv4_buffer,ip_packet_info.IPv4_Option,40,udp_packet,udp_packet_len);
 
 // Make Ip packet
-unsigned int MakeIpPacket(unsigned int DF,unsigned int MF,unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
+unsigned int MakeIpPacket(unsigned int DF, unsigned int MF, unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
 {
   //第一个byte
   unsigned char VersionAndIhl = extendl_8bit(ip_packet.IPv4_Version, 4) + extendl_8bit(ip_packet.IPv4_IHL, 0); //8 bit
   memcpy(buf, &VersionAndIhl, sizeof(VersionAndIhl));
-  //第二个byte  
+  //第二个byte
   unsigned char IPv4_TOS = extendl_8bit(ip_packet.IPv4_TOS, 0); //8 bit
   memcpy(&buf[1], &IPv4_TOS, sizeof(IPv4_TOS));                 //1已经被占用
   //第三四个byte
@@ -263,6 +263,7 @@ unsigned int MakeIpPacket(unsigned int DF,unsigned int MF,unsigned int FragmentO
 // network_layer_send(udp_buffer,UdpPacketLen,fileOut);
 void network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, FILE *fileOut)
 {
+  printf("udp_packet_len: %d\n",udp_packet_len);
   struct IP_Packet ip_packet_info = {0b0100, 0b1111, 0b00000000,         //IPv4_Version,IPv4_IHL,IPv4_TOS
                                      0b0000000000000000,                 //IPv4_TotalLength
                                      0b0000000000000000,                 //IPv4_Identification
@@ -277,6 +278,7 @@ void network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, 
   // Split the data
   for (unsigned int j = 0; j <= udp_packet_len / 1440; j++)
   {
+    printf("j: %d\n",j);
     // // 1 bit
     // unsigned int IPv4_NoFunc : 1;
     // // 1 bit
@@ -291,28 +293,27 @@ void network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, 
       // 0~IPV4_DATA_MAXSIZE-1 ; IPV4_DATA_MAXSIZE~2*IPV4_DATA_MAXSIZE-1;
       // j*IPV4_DATA_MAXSIZE~((j+1)*IPV4_DATA_MAXSIZE-1)
       unsigned char udp_packet_splited[IPV4_DATA_MAXSIZE];
-      for (int i = j * IPV4_DATA_MAXSIZE,l=0; i < ((j + 1) * IPV4_DATA_MAXSIZE - 1); i++,l++)
-      { 
+      for (int i = j * IPV4_DATA_MAXSIZE, l = 0; i < ((j + 1) * IPV4_DATA_MAXSIZE - 1); i++, l++)
+      {
         //printf("i:%d\n" ,i);
         udp_packet_splited[l] = udp_packet[i];
       }
       unsigned char ipv4_buffer[IPV4_DATA_MAXSIZE + 60]; //存放udp数据包
       unsigned int DF, MF, FragmentOffset;
-      DF = 1;
+      DF = 0;
       MF = 1;
       FragmentOffset = j;
       //unsigned int MakeIpPacket(unsigned int DF,unsigned int MF,unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
-      unsigned int IpPacketLen = MakeIpPacket(DF,MF,FragmentOffset,ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, 1440);
-      printf("Ip Packet Lengnth: %d\n",IpPacketLen);
+      unsigned int IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, 1440);
       datalink_layer_send(ipv4_buffer, IpPacketLen, fileOut);
     }
     else
     {
       int RestByte = udp_packet_len - (udp_packet_len / 1440) * IPV4_DATA_MAXSIZE;
       unsigned char udp_packet_splited[IPV4_DATA_MAXSIZE];
-      for (int i = j * IPV4_DATA_MAXSIZE; i < udp_packet_len; i++)
+      for (int i = j * IPV4_DATA_MAXSIZE, l = 0; i < udp_packet_len; i++, l++)
       {
-        udp_packet_splited[i] = udp_packet[i];
+        udp_packet_splited[l] = udp_packet[i];
       }
       //以8B为单位，即每个分片的长度必须是8B的整数倍。
       if (RestByte / 8 != 0)
@@ -326,11 +327,10 @@ void network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, 
       }
       unsigned char ipv4_buffer[IPV4_DATA_MAXSIZE + 60]; //存放udp数据包
       int DF, MF, FragmentOffset;
-      DF = 1;
+      DF = 0;
       MF = 0;
       FragmentOffset = j;
       unsigned long IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, RestByte);
-      printf("Ip Packet Lengnth: %d\n",IpPacketLen);
       datalink_layer_send(ipv4_buffer, IpPacketLen, fileOut);
     }
   }
@@ -363,7 +363,7 @@ unsigned long MakeUdpPacket(
   memcpy(buf, &UDP_SRC_PORT, sizeof(UDP_SRC_PORT));
   unsigned short UDP_DES_PORT = udp_packet.UDP_DES_PORT;
   memcpy(&buf[2], &UDP_DES_PORT, sizeof(UDP_DES_PORT));
-  unsigned short UDP_LEN = udp_packet.UDP_LEN;
+  unsigned short UDP_LEN = UDP_Data_Len + 8; //udp_packet.UDP_LEN;
   memcpy(&buf[4], &UDP_LEN, sizeof(UDP_LEN));
   unsigned short UDP_CHECK_SUM = udp_packet.UDP_CHECK_SUM;
   memcpy(&buf[6], &UDP_CHECK_SUM, sizeof(UDP_CHECK_SUM));
@@ -388,6 +388,7 @@ void start_send_udp(UDP_Packet udp_packet_info, char *fileinput, char *fileoutpu
   //存放udp数据包
   unsigned char UDP_Buffer[UDP_DATA_MAXSIZE + 8];
   fread(UDP_Data, sizeof(char), ByteCount, fileIn);
+  printf("ByteCount: %d\n",ByteCount);
   //形成udp数据包,放入UDP_Buffer
   unsigned int UdpPacketLen = MakeUdpPacket(udp_packet_info, UDP_Buffer, ByteCount, UDP_Data);
   //printf("UdpPacketLen:%d\n",UdpPacketLen);
@@ -412,8 +413,8 @@ struct IP_Packet ip_packet_info = {0b0100, 0b1111, 0b00000000,         //IPv4_Ve
                                    0b0,                                //IPv4_Option
                                    0b0};                               //IPv4_Data
 struct UDP_Packet udp_packet_info = {
-    0b0000000000000000, 0b0000000000000000, //UDP_SRC_PORT,UDP_DES_PORT
-    0b0000000000000000, 0b0000000000000000, //UDP_LEN,UDP_CHECK_SUM
+    0b0000000000000111, 0b1110000000000000, //UDP_SRC_PORT,UDP_DES_PORT
+    0b1111111111111111, 0b0000000000000000, //UDP_LEN,UDP_CHECK_SUM
     0b0};                                   //UDP_Data
 int main()
 {
