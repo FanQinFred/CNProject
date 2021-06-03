@@ -1,3 +1,6 @@
+/*
+  @函数采用帕斯卡命名法
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,15 +12,8 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-#define BUFLEN 1518
-#define PORT 8100
-
-/*
-  @函数采用帕斯卡命名法
-*/
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#define BUFLEN 65535
+#define PORT 8200
 
 #define UDP_DATA_MAXSIZE 65527
 #define IPV4_DATA_MAXSIZE 1440
@@ -108,28 +104,8 @@ void show_mac_addr(unsigned char m[6])
 // Send a frame
 int send_frame(unsigned char *frame_data, unsigned short len, int sockfd)
 {
-    printf("(int)len %d\n", (int)len);
-    printf("(char*)frame_data %s\n", (char *)frame_data);
-
-        //MAC
-        unsigned char dst_mac[6];
-        memcpy(dst_mac, frame_data, 6);
-        // Judge whether the MAC address is consistent
-        printf("DA_MAC:\n");
-        show_mac_addr(dst_mac);
-        printf("\n");
-
-        unsigned char src_mac[6];
-        memcpy(src_mac, &frame_data[6], 6);
-        printf("SA_MAC:\n");
-        show_mac_addr(src_mac);
-        printf("\n");
-
-
     int send_len= send(sockfd, (char *)frame_data, (int)len, 0);
     return send_len;
-    //fwrite(&len, sizeof(len), 1, file);          //发送帧的长度
-    //fwrite(frame_data, sizeof(char), len, file); //发送帧
 }
 
 // Start send
@@ -137,7 +113,6 @@ int datalink_layer_send(unsigned char *buf, int len, int sockfd)
 {
     unsigned char FrameBuffer[DATALINK_DATA_MAXSIZE + 18];
     unsigned short FrameLength = make_frame(&DesMacAddr, &SrcMacAddr, 0x0800, buf, len, FrameBuffer);
-    printf("FrameLength: %d\n", FrameLength);
     return send_frame(FrameBuffer, FrameLength, sockfd);
 }
 ///////////////////////数据链路层-发送-END////////////////////////////////
@@ -261,8 +236,6 @@ void HeaderSetCheckSum(IP_Packet &ip_packet)
         extendr_16bit(ip_packet.IPv4_DesAddr, 16);
 }
 
-//unsigned long IpPacketLen=MakeIpPacket(ip_packet_info,ipv4_buffer,ip_packet_info.IPv4_Option,40,udp_packet,udp_packet_len);
-
 // Make Ip packet
 unsigned int MakeIpPacket(unsigned int DF, unsigned int MF, unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
 {
@@ -273,7 +246,7 @@ unsigned int MakeIpPacket(unsigned int DF, unsigned int MF, unsigned int Fragmen
     unsigned char IPv4_TOS = extendl_8bit(ip_packet.IPv4_TOS, 0); //8 bit
     memcpy(&buf[1], &IPv4_TOS, sizeof(IPv4_TOS));                 //1已经被占用
     //第三四个byte
-    unsigned short IPv4_TotalLength = 5 + 40 + (short)IPv4_Data_Len; //ip_packet.IPv4_TotalLength;
+    unsigned short IPv4_TotalLength = 20 + 40 + (short)IPv4_Data_Len; //ip_packet.IPv4_TotalLength;
     memcpy(&buf[2], &IPv4_TotalLength, sizeof(IPv4_TotalLength));    //3已经被占用
     //第五六个byte
     unsigned short IPv4_Identification = ip_packet.IPv4_Identification;
@@ -308,7 +281,6 @@ unsigned int MakeIpPacket(unsigned int DF, unsigned int MF, unsigned int Fragmen
 int network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, int sockfd)
 {
     int socket_send_len = 0;
-    printf("udp_packet_len: %d\n", udp_packet_len);
     struct IP_Packet ip_packet_info = {0b0100, 0b1111, 0b00000000,         //IPv4_Version,IPv4_IHL,IPv4_TOS
                                        0b0000000000000000,                 //IPv4_TotalLength
                                        0b0000000000000000,                 //IPv4_Identification
@@ -349,7 +321,11 @@ int network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, i
             FragmentOffset = j;
             //unsigned int MakeIpPacket(unsigned int DF,unsigned int MF,unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
             unsigned int IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, 1440);
-            socket_send_len += datalink_layer_send(ipv4_buffer, IpPacketLen, sockfd);
+            
+            // IP in IP
+            unsigned char ipinip_buffer[1500 + 60]; //存放ip in ip数据包
+            unsigned int IpinIpPacketLen=MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipinip_buffer, ip_packet_info.IPv4_Option, 40, ipv4_buffer, 1500);
+            socket_send_len += datalink_layer_send(ipinip_buffer, IpinIpPacketLen, sockfd);
         }
         else
         {
@@ -375,7 +351,11 @@ int network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, i
             MF = 0;
             FragmentOffset = j;
             unsigned long IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, RestByte);
-            socket_send_len += datalink_layer_send(ipv4_buffer, IpPacketLen, sockfd);
+            
+            // IP in IP
+            unsigned char ipinip_buffer[1500 + 60]; //存放ip in ip数据包
+            unsigned int IpinIpPacketLen=MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipinip_buffer, ip_packet_info.IPv4_Option, 40, ipv4_buffer, RestByte+60);
+            socket_send_len += datalink_layer_send(ipinip_buffer, IpinIpPacketLen, sockfd);
         }
     }
     return socket_send_len;
@@ -481,7 +461,7 @@ int main(int argc, char **argv)
         FD_SET(sockfd, &rfds);
         if (maxfd < sockfd)
             maxfd = sockfd;
-        tv.tv_sec = 6;
+        tv.tv_sec = 10;
         tv.tv_usec = 0;
         retval = select(maxfd + 1, &rfds, NULL, NULL, &tv);
         if (retval == -1)
@@ -517,8 +497,21 @@ int main(int argc, char **argv)
             if (FD_ISSET(0, &rfds))
             {
                 /******发送消息*******/
-                bzero(buf, BUFLEN);
-                fgets(buf, BUFLEN, stdin);
+                // bzero(buf, BUFLEN);
+                // fgets(buf, BUFLEN, stdin);
+
+
+                FILE *fp2 = NULL;
+                fp2 = fopen("./len.txt", "rb");
+                int message_len= getw(fp2);
+                printf("renceive data length is: %d bytes\n",message_len);
+                fclose(fp2);
+
+                FILE *fp = NULL;
+                fp = fopen("./temp.txt", "w+");
+                fread(buf,message_len,1,fp);
+                fclose(fp);
+
 
                 if (!strncasecmp(buf, "quit", 4))
                 {
@@ -526,10 +519,10 @@ int main(int argc, char **argv)
                     break;
                 }
 
+
                 //存放udp数据包
                 unsigned char UDP_Buffer[UDP_DATA_MAXSIZE + 8];
                 //形成udp数据包,放入UDP_Buffer
-                printf("strlen(buf) %d\n", (int)strlen(buf));
                 unsigned int UdpPacketLen = MakeUdpPacket(udp_packet_info, UDP_Buffer, (int)strlen(buf), (unsigned char *)buf);
                 //将形成的UDP数据包发送给网络层处理
                 len = network_layer_send(UDP_Buffer, UdpPacketLen, sockfd);
@@ -545,6 +538,5 @@ int main(int argc, char **argv)
     }
     /*关闭连接*/
     close(sockfd);
-
     return 0;
 }

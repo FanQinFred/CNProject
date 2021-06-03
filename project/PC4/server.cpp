@@ -243,18 +243,137 @@ int HeaderGetCheckSum(IP_Packet &ip_packet)
            extendr_16bit(ip_packet.IPv4_DesAddr, 16);
 }
 
+///////////////////////网络层-接受-END////////////////////////////////
 void network_layer_receriver(unsigned char *payload, int len)
 {
+    //IPinIP_Version
+    unsigned char IPinIP_Version;
+    memcpy(&IPinIP_Version, &payload[0], 1);
+    //printf("IPinIP_Version: ");
+    //PrintBinary((int)IPinIP_Version, 7, 4);
+    //printf("\n");
+
+    //IPinIP_IHL
+    unsigned char IPinIP_IHL;
+    memcpy(&IPinIP_IHL, &payload[0], 1);
+    //printf("IPinIP_IHL: ");
+    //PrintBinary((int)IPinIP_Version,3,0); // 0 byte
+    //PrintBinary((int)IPinIP_Version, 7, 0); // 0 byte
+    //printf("\n");
+    IPinIP_IHL = IPinIP_IHL << 4;
+    IPinIP_IHL = IPinIP_IHL >> 4;
+
+    //IPinIP_TOS
+    unsigned char IPinIP_TOS;
+    memcpy(&IPinIP_TOS, &payload[1], 1);
+    //printf("IPinIP_TOS: ");
+    //PrintBinary((int)IPinIP_TOS, 7, 0); // 1 byte
+    //printf("\n");
+
+    //IPinIP_TotalLength
+    unsigned short IPinIP_TotalLength;
+    memcpy(&IPinIP_TotalLength, &payload[2], 2);
+    //printf("IPinIP_TotalLength: ");
+    //PrintBinary((int)IPinIP_TotalLength, 15, 0); // 2,3 byte
+    //printf("\n");
+
+    //IPinIP_Identification
+    unsigned short IPinIP_Identification;
+    memcpy(&IPinIP_Identification, &payload[4], 2);
+    //printf("IPinIP_Identification: ");
+    //PrintBinary((int)IPinIP_Identification, 15, 0); // 4,5 byte
+    //printf("\n");
+
+    //IPinIP_NoFunc
+    unsigned short IPinIP_NoFunc;
+    memcpy(&IPinIP_NoFunc, &payload[6], 2);
+    //printf("IPinIP_NoFunc: ");
+    //PrintBinary((int)IPinIP_NoFunc, 15, 15); // 6,7 byte
+    //printf("\n");
+
+    //IPinIP_DF
+    unsigned short IPinIP_DF;
+    memcpy(&IPinIP_DF, &payload[6], 2);
+    //printf("IPinIP_DF: ");
+    //PrintBinary((int)IPinIP_DF, 14, 14); // 6,7 byte
+    //printf("\n");
+
+    //IPinIP_MF
+    unsigned short IPinIP_MF;
+    memcpy(&IPinIP_MF, &payload[6], 2);
+    //printf("IPinIP_MF: ");
+    //PrintBinary((int)IPinIP_MF, 13, 13); // 6,7 byte
+    //printf("\n");
+
+    //IPinIP_FragmentOffset
+    unsigned short IPinIP_FragmentOffset;
+    memcpy(&IPinIP_FragmentOffset, &payload[6], 2);
+    //printf("IPinIP_FragmentOffset: ");
+    //PrintBinary((int)IPinIP_FragmentOffset, 12, 0); // 6,7 byte
+    //printf("\n");
+
+    //IPinIP_TimeTolive
+    unsigned char IPinIP_TimeTolive;
+    memcpy(&IPinIP_TimeTolive, &payload[8], 1);
+    //printf("IPinIP_TimeTolive: ");
+    //PrintBinary((int)IPinIP_TimeTolive, 7, 0); // 8 byte
+    //printf("\n");
+
+    //IPinIP_Protocol
+    unsigned char IPinIP_Protocol;
+    memcpy(&IPinIP_Protocol, &payload[9], 1);
+    //printf("IPinIP_Protocol: ");
+    //PrintBinary((int)IPinIP_Protocol, 7, 0); // 9 byte
+    //printf("\n");
+
+    //IPinIP_HeaderCheckSum
+    unsigned short IPinIP_HeaderCheckSum;
+    memcpy(&IPinIP_HeaderCheckSum, &payload[10], 2);
+    //printf("IPinIP_HeaderCheckSum: ");
+    //PrintBinary((int)IPinIP_HeaderCheckSum, 15, 0); // 10,11 byte
+    //printf("\n");
+
+    //IPinIP_SourceAddr
+    unsigned int IPinIP_SourceAddr;
+    memcpy(&IPinIP_SourceAddr, &payload[12], 4);
+    //printf("IPinIP_SourceAddr: ");
+    //PrintBinary((int)IPinIP_SourceAddr, 31, 0); // 12,13,14,15 byte
+    //printf("\n");
+
+    //IPinIP_DesAddr
+    unsigned int IPinIP_DesAddr;
+    memcpy(&IPinIP_DesAddr, &payload[16], 4);
+    //printf("IPinIP_DesAddr: ");
+    //PrintBinary((int)IPinIP_DesAddr, 31, 0); // 16,17,18,19 byte
+    //printf("\n");
+
+    //IPinIP_Option
+    int IPinIP_Option_Len = (int)IPinIP_IHL * 4 - 20;
+    unsigned char IPinIP_Option[40]; //最多40个Byte
+    memcpy(&IPinIP_Option, &payload[20], IPinIP_Option_Len);
+    //printf("IPinIP_Option: ");
+    for (int i = 0; i < IPinIP_Option_Len; ++i)
+    {
+        //PrintBinary((int)IPinIP_Option[i], 7, 0); // 16,17,18,19 byte
+    }
+    //printf("\n");
+
+    //IPinIP_Data
+    int IPinIP_Data_Len = (int)IPinIP_TotalLength - (int)IPinIP_Option_Len;
+    unsigned char IPinIP_Data[1500]; //最多40个Byte
+    memcpy(&IPinIP_Data, &payload[20 + IPinIP_Option_Len], IPinIP_Data_Len);
+
+    printf("IP Packet Message: \n");
     //IPv4_Version
     unsigned char IPv4_Version;
-    memcpy(&IPv4_Version, &payload[0], 1);
+    memcpy(&IPv4_Version, &IPinIP_Data[0], 1);
     printf("IPv4_Version: ");
     PrintBinary((int)IPv4_Version, 7, 4);
     printf("\n");
 
     //IPv4_IHL
     unsigned char IPv4_IHL;
-    memcpy(&IPv4_IHL, &payload[0], 1);
+    memcpy(&IPv4_IHL, &IPinIP_Data[0], 1);
     printf("IPv4_IHL: ");
     //PrintBinary((int)IPv4_Version,3,0); // 0 byte
     PrintBinary((int)IPv4_Version, 7, 0); // 0 byte
@@ -264,103 +383,103 @@ void network_layer_receriver(unsigned char *payload, int len)
 
     //IPv4_TOS
     unsigned char IPv4_TOS;
-    memcpy(&IPv4_TOS, &payload[1], 1);
+    memcpy(&IPv4_TOS, &IPinIP_Data[1], 1);
     printf("IPv4_TOS: ");
     PrintBinary((int)IPv4_TOS, 7, 0); // 1 byte
     printf("\n");
 
     //IPv4_TotalLength
     unsigned short IPv4_TotalLength;
-    memcpy(&IPv4_TotalLength, &payload[2], 2);
+    memcpy(&IPv4_TotalLength, &IPinIP_Data[2], 2);
     printf("IPv4_TotalLength: ");
     PrintBinary((int)IPv4_TotalLength, 15, 0); // 2,3 byte
     printf("\n");
 
     //IPv4_Identification
     unsigned short IPv4_Identification;
-    memcpy(&IPv4_Identification, &payload[4], 2);
+    memcpy(&IPv4_Identification, &IPinIP_Data[4], 2);
     printf("IPv4_Identification: ");
     PrintBinary((int)IPv4_Identification, 15, 0); // 4,5 byte
     printf("\n");
 
     //IPv4_NoFunc
     unsigned short IPv4_NoFunc;
-    memcpy(&IPv4_NoFunc, &payload[6], 2);
+    memcpy(&IPv4_NoFunc, &IPinIP_Data[6], 2);
     printf("IPv4_NoFunc: ");
     PrintBinary((int)IPv4_NoFunc, 15, 15); // 6,7 byte
     printf("\n");
 
     //IPv4_DF
     unsigned short IPv4_DF;
-    memcpy(&IPv4_DF, &payload[6], 2);
+    memcpy(&IPv4_DF, &IPinIP_Data[6], 2);
     printf("IPv4_DF: ");
     PrintBinary((int)IPv4_DF, 14, 14); // 6,7 byte
     printf("\n");
 
     //IPv4_MF
     unsigned short IPv4_MF;
-    memcpy(&IPv4_MF, &payload[6], 2);
+    memcpy(&IPv4_MF, &IPinIP_Data[6], 2);
     printf("IPv4_MF: ");
     PrintBinary((int)IPv4_MF, 13, 13); // 6,7 byte
     printf("\n");
 
     //IPv4_FragmentOffset
     unsigned short IPv4_FragmentOffset;
-    memcpy(&IPv4_FragmentOffset, &payload[6], 2);
+    memcpy(&IPv4_FragmentOffset, &IPinIP_Data[6], 2);
     printf("IPv4_FragmentOffset: ");
     PrintBinary((int)IPv4_FragmentOffset, 12, 0); // 6,7 byte
     printf("\n");
 
     //IPv4_TimeTolive
     unsigned char IPv4_TimeTolive;
-    memcpy(&IPv4_TimeTolive, &payload[8], 1);
+    memcpy(&IPv4_TimeTolive, &IPinIP_Data[8], 1);
     printf("IPv4_TimeTolive: ");
     PrintBinary((int)IPv4_TimeTolive, 7, 0); // 8 byte
     printf("\n");
 
     //IPv4_Protocol
     unsigned char IPv4_Protocol;
-    memcpy(&IPv4_Protocol, &payload[9], 1);
+    memcpy(&IPv4_Protocol, &IPinIP_Data[9], 1);
     printf("IPv4_Protocol: ");
     PrintBinary((int)IPv4_Protocol, 7, 0); // 9 byte
     printf("\n");
 
     //IPv4_HeaderCheckSum
     unsigned short IPv4_HeaderCheckSum;
-    memcpy(&IPv4_HeaderCheckSum, &payload[10], 2);
+    memcpy(&IPv4_HeaderCheckSum, &IPinIP_Data[10], 2);
     printf("IPv4_HeaderCheckSum: ");
     PrintBinary((int)IPv4_HeaderCheckSum, 15, 0); // 10,11 byte
     printf("\n");
 
     //IPv4_SourceAddr
     unsigned int IPv4_SourceAddr;
-    memcpy(&IPv4_SourceAddr, &payload[12], 4);
+    memcpy(&IPv4_SourceAddr, &IPinIP_Data[12], 4);
     printf("IPv4_SourceAddr: ");
     PrintBinary((int)IPv4_SourceAddr, 31, 0); // 12,13,14,15 byte
     printf("\n");
 
     //IPv4_DesAddr
     unsigned int IPv4_DesAddr;
-    memcpy(&IPv4_DesAddr, &payload[16], 4);
+    memcpy(&IPv4_DesAddr, &IPinIP_Data[16], 4);
     printf("IPv4_DesAddr: ");
     PrintBinary((int)IPv4_DesAddr, 31, 0); // 16,17,18,19 byte
     printf("\n");
 
     //IPv4_Option
-    int Option_Len = (int)IPv4_IHL * 4 - 20;
+    int IPv4_Option_Len = (int)IPv4_IHL * 4 - 20;
     unsigned char IPv4_Option[40]; //最多40个Byte
-    memcpy(&IPv4_Option, &payload[20], Option_Len);
+    memcpy(&IPv4_Option, &IPinIP_Data[20], IPv4_Option_Len);
     printf("IPv4_Option: ");
-    for (int i = 0; i < Option_Len; ++i)
+    for (int i = 0; i < IPv4_Option_Len; ++i)
     {
         PrintBinary((int)IPv4_Option[i], 7, 0); // 16,17,18,19 byte
     }
     printf("\n");
 
     //IPv4_Data
-    int Data_Len = (int)IPv4_TotalLength - (int)IPv4_IHL - 5;
+    int IPv4_Data_Len = (int)IPv4_TotalLength - (int)IPv4_Option_Len;
     unsigned char IPv4_Data[1500]; //最多40个Byte
-    memcpy(&IPv4_Data, &payload[20 + Option_Len], Data_Len);
+    memcpy(&IPv4_Data, &IPinIP_Data[20 + IPv4_Option_Len], IPv4_Data_Len);
 
     //开始拼接
     unsigned short DF, MF, FragmentOffset;
@@ -378,8 +497,8 @@ void network_layer_receriver(unsigned char *payload, int len)
     }
     else
     { //最后一个分片
-        UDP_LEN += Data_Len;
-        for (int i = FragmentOffset * IPV4_DATA_MAXSIZE, l = 0; i < (FragmentOffset * IPV4_DATA_MAXSIZE + Data_Len); i++, l++)
+        UDP_LEN += IPv4_Data_Len;
+        for (int i = FragmentOffset * IPV4_DATA_MAXSIZE, l = 0; i < (FragmentOffset * IPV4_DATA_MAXSIZE + IPv4_Data_Len); i++, l++)
         {
             UDP_PACKET[i] = IPv4_Data[l];
         }
@@ -387,15 +506,8 @@ void network_layer_receriver(unsigned char *payload, int len)
     transfer_layer_receriver(UDP_PACKET, UDP_LEN);
     //结束拼接
 
-    //暂时不打印IPv4_Data
-    // printf("IPv4_Data: ");
-    // for (int i = 0; i < Data_Len; ++i)
-    // {
-    //     PrintBinary((int)IPv4_Data[i], 7, 0); // 16,17,18,19 byte
-    // }
-    // printf("\n");
 }
-///////////////////////网络层-接受-END////////////////////////////////
+
 
 ///////////////////////数据链路层-接受-START////////////////////////////////
 #define MAXSIZE 1500
@@ -479,6 +591,7 @@ bool mac_same(unsigned char *dst_mac, unsigned char *my_mac, int mac_len)
     return true;
 }
 
+
 int main()
 {
     int sockfd, newfd;
@@ -529,7 +642,7 @@ int main()
             exit(errno);
         }
         else
-            printf("客户端是：%s: %d\n", inet_ntoa(c_addr.sin_addr), ntohs(c_addr.sin_port));
+            printf("正在与您聊天的客户端是：%s: %d\n", inet_ntoa(c_addr.sin_addr), ntohs(c_addr.sin_port));
         while (1)
         {
             FD_ZERO(&rfds);
@@ -587,79 +700,89 @@ int main()
                     memset(buf, 0, sizeof(buf));
                     /*fgets函数：从流中读取BUFLEN-1个字符*/
                     len = recv(newfd, buf, BUFLEN, 0);
+
+                    //write to file
+                    //write to file
+                    FILE *fp = NULL;
+                    fp = fopen("./temp.txt", "w+");
+
+                    fwrite(buf,len,1,fp);
+                    fclose(fp);
+
+
+                    FILE *fp1 = NULL;
+                    fp1 = fopen("./len.txt", "wb");
+                    
+                    putw(len,fp1);
+                    
+                    fclose(fp1);
+
+
+                    FILE *fp2 = NULL;
+                    fp2 = fopen("./len.txt", "rb");
+                    int aaa= getw(fp2);
+                    printf("renceive data length is: %d bytes\n",aaa);
+                    fclose(fp2);
+
+
                     if (len > 0)
                     {
                         printf("<--------------------------------------------------------------------------------------------------------------->\n");
-                        printf("<--------------------------------------------------------------------------------------------------------------->\n");
-                        struct sockaddr_in s_addr_clent;
-                        socklen_t len_clent;
-                        unsigned int port;
-                        char buf_clent[BUFLEN];
-                        fd_set rfds_clent;
-                        struct timeval tv_clent;
-                        int retval_clent, maxfd_clent;
+                        // printf("客户端发来的信息是：\n");
+                        // for (int ii = 0; ii < len; ii++)
+                        // {
+                        //     printf("%c", buf[ii]);
+                        // }
+                        // printf("\n");
 
-                        int sockfd_clent;
-                        /*建立socket*/
-                        if ((sockfd_clent = socket(AF_INET, SOCK_STREAM, 0)) == -1)
+                        //CRC
+                        unsigned int crc32_result = crc32((unsigned char *)buf, len - 4);
+                        unsigned char crc32_result_c[4];
+                        memcpy(crc32_result_c, &crc32_result, sizeof(crc32_result));
+                        // Judge whether the CRC check code is consistent
+                        bool bool_crc_same = crc32_result_c[3] == buf[len - 1] &&
+                                             crc32_result_c[2] == buf[len - 2] &&
+                                             crc32_result_c[1] == buf[len - 3] &&
+                                             crc32_result_c[0] == buf[len - 4];
+                        if (!bool_crc_same)
                         {
-                            perror("client socket");
-                            exit(errno);
+                            //printf("CRC ERROR\n");
+                            //exit(0);
                         }
-                        else
-                            printf("socket create success!\n");
+                        //MAC
+                        unsigned char dst_mac[6];
+                        memcpy(&dst_mac, &buf, 6);
+                        // Judge whether the MAC address is consistent
+                        bool bool_mac_same = mac_same(dst_mac, my_mac, 6);
+                        if (!bool_mac_same)
+                        {
+                           // printf("MAC ERROR\n");
+                           // exit(0);
+                        }
+                        //printf("DA_MAC:\n");
+                        //show_mac_addr(dst_mac);
+                        //printf("\n");
 
-                        /*设置服务器ip*/
-                        memset(&s_addr_clent, 0, sizeof(s_addr_clent));
-                        s_addr_clent.sin_family = AF_INET;
-                        s_addr_clent.sin_port = htons(PORT);
-                        if (inet_aton(argv[1], (struct in_addr *)&s_addr_clent.sin_addr.s_addr_clent) == 0)
-                        {
-                            perror(argv[1]);
-                            exit(errno);
-                        }
-                        /*开始连接服务器*/
-                        if (connect(sockfd_clent, (struct sockaddr *)&s_addr_clent, sizeof(struct sockaddr)) == -1)
-                        {
-                            perror("connect");
-                            exit(errno);
-                        }
-                        else
-                            printf("conncet success!\n");
+                        unsigned char src_mac[6];
+                        memcpy(&src_mac, &buf[6], 6);
+                       // printf("SA_MAC:\n");
+                        //show_mac_addr(src_mac);
+                       // printf("\n");
 
-                        FD_ZERO(&rfds_clent);
-                        FD_SET(0, &rfds_clent);
-                        maxfd_clent = 0;
-                        FD_SET(sockfd_clent, &rfds_clent);
-                        if (maxfd_clent < sockfd_clent)
-                            maxfd_clent = sockfd_clent;
-                        tv_clent.tv_sec = 10;
-                        tv_clent.tv_usec = 0;
-                        retval_clent = select(maxfd_clent + 1, &rfds_clent, NULL, NULL, &tv_clent);
-                        if (retval_clent == -1)
-                        {
-                            printf("select出错，客户端程序退出\n");
-                            break;
-                        }
-                        else if (retval_clent == 0)
-                        {
-                            printf("waiting...\n");
-                            continue;
-                        }
-                        else
-                        {
-                            int send_len = send(sockfd_clent, (char *)buf, (int)(len), 0);
-                            if (send_len > 0)
-                                printf("\t消息发送成功：%s\n", buf_clent);
-                            else
-                            {
-                                printf("消息发送失败!\n");
-                                break;
-                            }
-                        }
-                        /*关闭连接*/
-                        close(sockfd_clent);
-                        printf("<--------------------------------------------------------------------------------------------------------------->\n");
+                        unsigned char protocol_type[2];
+                        memcpy(&protocol_type, &buf[12], 2);
+                        //printf("ProtocalType:\n");
+                        //show_protocol(protocol_type);
+                        ///printf("\n");
+
+                        unsigned char payload[1500];
+                        memcpy(payload, &buf[14], len - 18);
+                        network_layer_receriver(payload, len - 18);
+
+                        //暂时不打印PayLoad
+                        // printf("PayLoad:\n");
+                        // show_payload(payload, len - 18);
+                        // printf("\n");
                         printf("<--------------------------------------------------------------------------------------------------------------->\n");
                     }
                     else

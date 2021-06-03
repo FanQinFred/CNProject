@@ -246,7 +246,7 @@ unsigned int MakeIpPacket(unsigned int DF, unsigned int MF, unsigned int Fragmen
     unsigned char IPv4_TOS = extendl_8bit(ip_packet.IPv4_TOS, 0); //8 bit
     memcpy(&buf[1], &IPv4_TOS, sizeof(IPv4_TOS));                 //1已经被占用
     //第三四个byte
-    unsigned short IPv4_TotalLength = 5 + 40 + (short)IPv4_Data_Len; //ip_packet.IPv4_TotalLength;
+    unsigned short IPv4_TotalLength = 20 + 40 + (short)IPv4_Data_Len; //ip_packet.IPv4_TotalLength;
     memcpy(&buf[2], &IPv4_TotalLength, sizeof(IPv4_TotalLength));    //3已经被占用
     //第五六个byte
     unsigned short IPv4_Identification = ip_packet.IPv4_Identification;
@@ -321,7 +321,11 @@ int network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, i
             FragmentOffset = j;
             //unsigned int MakeIpPacket(unsigned int DF,unsigned int MF,unsigned int FragmentOffset, const IP_Packet ip_packet, unsigned char *buf, unsigned char *IPv4_Option, long IPv4_Option_Len, unsigned char *IPv4_Data, short IPv4_Data_Len)
             unsigned int IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, 1440);
-            socket_send_len += datalink_layer_send(ipv4_buffer, IpPacketLen, sockfd);
+            
+            // IP in IP
+            unsigned char ipinip_buffer[1500 + 60]; //存放ip in ip数据包
+            unsigned int IpinIpPacketLen=MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipinip_buffer, ip_packet_info.IPv4_Option, 40, ipv4_buffer, 1500);
+            socket_send_len += datalink_layer_send(ipinip_buffer, IpinIpPacketLen, sockfd);
         }
         else
         {
@@ -347,7 +351,11 @@ int network_layer_send(unsigned char *udp_packet, unsigned int udp_packet_len, i
             MF = 0;
             FragmentOffset = j;
             unsigned long IpPacketLen = MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipv4_buffer, ip_packet_info.IPv4_Option, 40, udp_packet_splited, RestByte);
-            socket_send_len += datalink_layer_send(ipv4_buffer, IpPacketLen, sockfd);
+            
+            // IP in IP
+            unsigned char ipinip_buffer[1500 + 60]; //存放ip in ip数据包
+            unsigned int IpinIpPacketLen=MakeIpPacket(DF, MF, FragmentOffset, ip_packet_info, ipinip_buffer, ip_packet_info.IPv4_Option, 40, ipv4_buffer, RestByte+60);
+            socket_send_len += datalink_layer_send(ipinip_buffer, IpinIpPacketLen, sockfd);
         }
     }
     return socket_send_len;
@@ -474,6 +482,10 @@ int main(int argc, char **argv)
                 /******接收消息*******/
                 bzero(buf, BUFLEN);
                 len = recv(sockfd, buf, BUFLEN, 0);
+
+
+
+                
                 if (len > 0)
                     printf("服务器发来的消息是：%s\n", buf);
                 else
@@ -489,8 +501,20 @@ int main(int argc, char **argv)
             if (FD_ISSET(0, &rfds))
             {
                 /******发送消息*******/
-                bzero(buf, BUFLEN);
-                fgets(buf, BUFLEN, stdin);
+                // bzero(buf, BUFLEN);
+                // fgets(buf, BUFLEN, stdin);
+
+                FILE *fp2 = NULL;
+                fp2 = fopen("./len.txt", "rb");
+                int message_len= getw(fp2);
+                printf("renceive data length is: %d bytes\n",message_len);
+                fclose(fp2);
+
+                FILE *fp = NULL;
+                fp = fopen("./temp.txt", "w+");
+                fread(buf,message_len,1,fp);
+                fclose(fp);
+
 
                 if (!strncasecmp(buf, "quit", 4))
                 {
